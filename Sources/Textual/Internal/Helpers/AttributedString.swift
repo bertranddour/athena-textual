@@ -16,6 +16,10 @@ extension AttributedStringProtocol {
       .trimmingCharacters(in: .whitespacesAndNewlines) == "\u{FFFC}"
   }
 
+  var hasLinks: Bool {
+    runs.contains { $0.link != nil }
+  }
+
   func attachments() -> Set<AnyAttachment> {
     uniqueValues(for: \.textual.attachment)
   }

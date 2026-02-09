@@ -47,7 +47,7 @@ struct TextFragment<Content: AttributedStringProtocol>: View {
       }
       .modifier(TextSelectionBackground())
       .modifier(AttachmentOverlay(attachments: content.attachments()))
-      .modifier(TextLinkInteraction())
+      .modifier(TextLinkInteraction(hasLinks: content.hasLinks))
   }
 
   private var text: Text {

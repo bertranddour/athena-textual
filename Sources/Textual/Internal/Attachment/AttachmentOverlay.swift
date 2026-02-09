@@ -19,7 +19,7 @@ struct AttachmentOverlay: ViewModifier {
   func body(content: Content) -> some View {
     content
       .overlayPreferenceValue(Text.LayoutKey.self) { value in
-        if let anchoredLayout = value.first {
+        if !attachments.isEmpty, let anchoredLayout = value.first {
           GeometryReader { geometry in
             AttachmentView(
               attachments: attachments,
