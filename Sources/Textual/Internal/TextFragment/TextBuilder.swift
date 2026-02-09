@@ -96,8 +96,23 @@ extension Text {
       return text
     }
 
-    self = textValues.reduce(Text(verbatim: "")) { partialResult, text in
-      Text("\(partialResult)\(text)")
+    self = Self.balanced(textValues)
+  }
+
+  /// Concatenates Text values using balanced binary merging.
+  /// Depth O(log N) instead of O(N), preventing stack overflow
+  /// when rendering syntax-highlighted code blocks with many tokens.
+  private static func balanced(_ values: [Text]) -> Text {
+    switch values.count {
+    case 0:
+      return Text(verbatim: "")
+    case 1:
+      return values[0]
+    default:
+      let mid = values.count / 2
+      let left = balanced(Array(values[..<mid]))
+      let right = balanced(Array(values[mid...]))
+      return Text("\(left)\(right)")
     }
   }
 
