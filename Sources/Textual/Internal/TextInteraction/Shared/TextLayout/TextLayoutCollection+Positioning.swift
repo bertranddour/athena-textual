@@ -75,6 +75,7 @@
     }
 
     func localCharacterRange(at indexPath: IndexPath) -> Range<Int> {
+      guard isValidIndexPath(indexPath) else { return 0..<0 }
       let line = layouts[indexPath.layout].lines[indexPath.line]
       return line.runs[indexPath.run]
         .slices[indexPath.runSlice]
@@ -82,6 +83,7 @@
     }
 
     func layoutDirection(at indexPath: IndexPath) -> LayoutDirection {
+      guard isValidIndexPath(indexPath) else { return .leftToRight }
       let line = layouts[indexPath.layout].lines[indexPath.line]
       return line.runs[indexPath.run].layoutDirection
     }

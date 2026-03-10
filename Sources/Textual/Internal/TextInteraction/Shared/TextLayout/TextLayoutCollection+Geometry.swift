@@ -39,6 +39,7 @@
     }
 
     func caretRect(for position: TextPosition) -> CGRect {
+      guard isValidIndexPath(position.indexPath) else { return .zero }
       let runSliceRect = runSliceRect(at: position.indexPath)
       let lineRect = lineRect(at: position.indexPath)
       let layoutDirection = layoutDirection(at: position.indexPath)
@@ -65,11 +66,11 @@
 
       let lineIndex = layout.lineIndex(closestToY: localPoint.y)
       let line = layout.lines[lineIndex]
-      let runIndex = line.runIndex(closestToX: localPoint.x)
+      guard let runIndex = line.runIndex(closestToX: localPoint.x) else { return nil }
       let run = line.runs[runIndex]
       let direction = run.layoutDirection
 
-      let runSliceIndex = run.sliceIndex(closestToX: localPoint.x)
+      guard let runSliceIndex = run.sliceIndex(closestToX: localPoint.x) else { return nil }
       let runSlice = run.slices[runSliceIndex]
 
       let leadingDistance = abs(
@@ -105,9 +106,9 @@
 
       let lineIndex = layout.lineIndex(closestToY: localPoint.y)
       let line = layout.lines[lineIndex]
-      let runIndex = line.runIndex(closestToX: localPoint.x)
+      guard let runIndex = line.runIndex(closestToX: localPoint.x) else { return nil }
       let run = line.runs[runIndex]
-      let runSliceIndex = run.sliceIndex(closestToX: localPoint.x)
+      guard let runSliceIndex = run.sliceIndex(closestToX: localPoint.x) else { return nil }
 
       let start = TextPosition(
         indexPath: .init(
@@ -133,6 +134,7 @@
         return true
       }
 
+      guard layouts.indices.contains(position.indexPath.layout) else { return false }
       let layout = layouts[position.indexPath.layout]
 
       guard
@@ -160,6 +162,7 @@
     }
 
     func positionAbove(_ position: TextPosition, anchor: TextPosition) -> TextPosition? {
+      guard isValidIndexPath(anchor.indexPath) else { return startPosition }
       let anchorX = runSliceRect(at: anchor.indexPath).midX
 
       if position.indexPath.line > 0 {
@@ -184,6 +187,7 @@
     }
 
     func positionBelow(_ position: TextPosition, anchor: TextPosition) -> TextPosition? {
+      guard isValidIndexPath(anchor.indexPath) else { return endPosition }
       let anchorX = runSliceRect(at: anchor.indexPath).midX
       let layout = layouts[position.indexPath.layout]
 
@@ -207,6 +211,7 @@
     }
 
     func runSliceSelectionRect(at indexPath: IndexPath) -> CGRect {
+      guard isValidIndexPath(indexPath) else { return .null }
       let layout = layouts[indexPath.layout]
       let line = layout.lines[indexPath.line]
       let runSlice = line.runs[indexPath.run].slices[indexPath.runSlice]
@@ -227,11 +232,11 @@
     ) -> TextPosition? {
       let layout = layouts[layoutIndex]
       let line = layout.lines[lineIndex]
-      let runIndex = line.runIndex(closestToX: x)
+      guard let runIndex = line.runIndex(closestToX: x) else { return nil }
       let run = line.runs[runIndex]
       let direction = run.layoutDirection
 
-      let runSliceIndex = run.sliceIndex(closestToX: x)
+      guard let runSliceIndex = run.sliceIndex(closestToX: x) else { return nil }
       let runSlice = run.slices[runSliceIndex]
 
       let leadingDistance = abs(
@@ -253,12 +258,14 @@
     }
 
     fileprivate func runSliceRect(at indexPath: IndexPath) -> CGRect {
+      guard isValidIndexPath(indexPath) else { return .zero }
       let layout = layouts[indexPath.layout]
       let runSlice = layout.lines[indexPath.line].runs[indexPath.run].slices[indexPath.runSlice]
       return runSlice.typographicBounds.offsetBy(dx: layout.origin.x, dy: layout.origin.y)
     }
 
     fileprivate func lineRect(at indexPath: IndexPath) -> CGRect {
+      guard isValidIndexPath(indexPath) else { return .zero }
       let layout = layouts[indexPath.layout]
       let line = layout.lines[indexPath.line]
       return line.typographicBounds.offsetBy(dx: layout.origin.x, dy: layout.origin.y)
@@ -293,8 +300,20 @@
     }
   }
 
+  extension TextLayoutCollection {
+    func isValidIndexPath(_ indexPath: IndexPath) -> Bool {
+      guard layouts.indices.contains(indexPath.layout) else { return false }
+      let lines = layouts[indexPath.layout].lines
+      guard lines.indices.contains(indexPath.line) else { return false }
+      let runs = lines[indexPath.line].runs
+      guard runs.indices.contains(indexPath.run) else { return false }
+      return runs[indexPath.run].slices.indices.contains(indexPath.runSlice)
+    }
+  }
+
   extension TextLine {
-    fileprivate func runIndex(closestToX x: CGFloat) -> Int {
+    fileprivate func runIndex(closestToX x: CGFloat) -> Int? {
+      guard !runs.isEmpty else { return nil }
       var closestIndex = 0
       var closestDistance = CGFloat.greatestFiniteMagnitude
       for (index, run) in runs.enumerated() {
@@ -309,7 +328,8 @@
   }
 
   extension TextRun {
-    fileprivate func sliceIndex(closestToX x: CGFloat) -> Int {
+    fileprivate func sliceIndex(closestToX x: CGFloat) -> Int? {
+      guard !slices.isEmpty else { return nil }
       var closestIndex = 0
       var closestDistance = CGFloat.greatestFiniteMagnitude
       for (index, slice) in slices.enumerated() {
