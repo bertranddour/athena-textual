@@ -146,6 +146,10 @@
 
   extension UITextInteractionView: UITextInteractionDelegate {
     func interactionShouldBegin(_ interaction: UITextInteraction, at point: CGPoint) -> Bool {
+      if model.url(for: point) != nil {
+        logger.debug("interactionShouldBegin(at: \(point.logDescription)) -> false (link)")
+        return false
+      }
       logger.debug("interactionShouldBegin(at: \(point.logDescription)) -> true")
       return true
     }
