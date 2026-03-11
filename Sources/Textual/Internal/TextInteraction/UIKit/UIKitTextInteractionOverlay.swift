@@ -22,15 +22,13 @@
     func makeUIView(context: Context) -> UITextInteractionView {
       UITextInteractionView(
         model: model,
-        exclusionRects: overflowFrames,
-        openURL: context.environment.openURL
+        exclusionRects: overflowFrames
       )
     }
 
     func updateUIView(_ uiView: UITextInteractionView, context: Context) {
       uiView.model = model
       uiView.exclusionRects = overflowFrames
-      uiView.openURL = context.environment.openURL
     }
   }
 #endif

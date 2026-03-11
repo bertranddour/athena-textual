@@ -19,8 +19,6 @@
 
     var model: TextSelectionModel
     var exclusionRects: [CGRect]
-    var openURL: OpenURLAction
-
     weak var inputDelegate: (any UITextInputDelegate)?
 
     let logger = Logger(category: .textInteraction)
@@ -30,12 +28,10 @@
 
     init(
       model: TextSelectionModel,
-      exclusionRects: [CGRect],
-      openURL: OpenURLAction
+      exclusionRects: [CGRect]
     ) {
       self.model = model
       self.exclusionRects = exclusionRects
-      self.openURL = openURL
       self.selectionInteraction = UITextInteraction(for: .nonEditable)
 
       super.init(frame: .zero)
@@ -53,6 +49,9 @@
         if exclusionRect.contains(point) {
           return false
         }
+      }
+      if model.url(for: point) != nil {
+        return false
       }
       return super.point(inside: point, with: event)
     }
@@ -94,25 +93,10 @@
         self.inputDelegate?.selectionDidChange(self)
       }
 
-      let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
-      addGestureRecognizer(tapGesture)
-
       selectionInteraction.textInput = self
       selectionInteraction.delegate = self
 
-      for gesture in selectionInteraction.gesturesForFailureRequirements {
-        tapGesture.require(toFail: gesture)
-      }
-
       addInteraction(selectionInteraction)
-    }
-
-    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
-      let location = gesture.location(in: self)
-      guard let url = model.url(for: location) else {
-        return
-      }
-      openURL(url)
     }
 
     @objc private func share(_ sender: Any?) {
@@ -146,10 +130,6 @@
 
   extension UITextInteractionView: UITextInteractionDelegate {
     func interactionShouldBegin(_ interaction: UITextInteraction, at point: CGPoint) -> Bool {
-      if model.url(for: point) != nil {
-        logger.debug("interactionShouldBegin(at: \(point.logDescription)) -> false (link)")
-        return false
-      }
       logger.debug("interactionShouldBegin(at: \(point.logDescription)) -> true")
       return true
     }
